@@ -105,7 +105,6 @@ describe Event do
       end
 
       it "should be able to create" do
-        pending("The create as such is not a problem, just that it will again be inserted as invitee, since create is not scoped. Have to enable callbacks to make this work.")
         @bruce = @event.attendees.create!(:name => 'Bruce Dickinson')
         @event.reload
         @event.attendees.should include(@bruce)
@@ -113,7 +112,7 @@ describe Event do
         @event.should have(3).invitees
         @event.should have(2).attendees
         #at least one attending should be true
-        eval(@event.invitations.collect(&:attending).join(" || ")).should == true
+        eval(@event.invitations.collect(&:attending).compact.join(" || ")).should == true
       end
 
       it "should be able to delete" do
@@ -125,7 +124,6 @@ describe Event do
       end
 
       it "should be able to <<" do
-        pending("The insert as such is not a problem, just that it will again be inserted as invitee, since create is not scoped. Have to enable callbacks to make this work.")
         @event.attendees << @dave
         @event.reload
         @event.should have(2).attendees

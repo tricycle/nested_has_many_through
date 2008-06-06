@@ -141,8 +141,12 @@ class Event < ActiveRecord::Base
   has_many :event_associates
   has_many :invitations, :through => :event_associates, :source => :associate, :source_type => Invitation.name
   has_many :invitees, :through => :invitations
-  has_many :attendees, :through => :invitations, :source => :invitee, :conditions => ['attending = ?', true]
+  has_many :attendees, :through => :invitations, :source => :invitee, :conditions => ['attending = ?', true], :before_add => [:before_attendee_add]
   has_many :tribes, :through => :invitees
+
+  def before_attendee_add attendee, invitation_params
+    invitation_params[:attending] = true
+  end
 end
 
 class Tribe < ActiveRecord::Base; end
