@@ -51,6 +51,19 @@ ActiveRecord::Migration.suppress_messages do
       t.references :invitee
       t.boolean :attending
     end
+
+    create_table :countries, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :citizenships, :force => true do |t|
+      t.references :country
+      t.references :citizen
+    end
+
+    create_table :citizens, :force => true do |t|
+      t.string :name
+    end
   end
 end
 
@@ -133,3 +146,17 @@ class Event < ActiveRecord::Base
 end
 
 class Tribe < ActiveRecord::Base; end
+
+class Country < ActiveRecord::Base
+  has_many :citizenships
+  has_many :citizens, :through => :citizenships, :before_add => [:before_citizen_add]
+
+  def before_citizen_add; end
+end
+
+class Citizenship < ActiveRecord::Base
+  belongs_to :country
+  belongs_to :citizen
+end
+
+class Citizen < ActiveRecord::Base; end

@@ -45,11 +45,62 @@ module NestedHasManyThrough
             flatten_deeper(records).each do |associate|
               raise_on_type_mismatch(associate)
               raise ActiveRecord::HasManyThroughCantAssociateNewRecords.new(@owner, through) unless associate.respond_to?(:new_record?) && !associate.new_record?
-              @owner.send(@reflection.through_reflection.name) << target_class.send(:with_scope, :create => construct_join_attributes(associate)) { target_class.create! }
+
+              create_scope_hash = {}
+              callback(:before_add, associate, create_scope_hash)
+              associate_parent = target_class.send(:with_scope, :create => create_scope_hash.merge(construct_join_attributes(associate))) { target_class.create! }
+              @owner.send(@reflection.through_reflection.name) << associate_parent
+              callback(:after_add, associate, associate_parent)
+              
               @target << associate if loaded?
             end
           end
           self
+        end
+
+        def delete(*records)
+        through = @reflection.through_reflection
+        raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) if @owner.new_record?
+
+        load_target
+        klass = through.klass
+        klass.transaction do
+          flatten_deeper(records).each do |associate|
+            raise_on_type_mismatch(associate)
+            raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) unless associate.respond_to?(:new_record?) && !associate.new_record?
+            callback(:before_remove, associate)
+            @owner.send(through.name).proxy_target.delete(klass.delete_all(construct_join_attributes(associate)))
+            callback(:after_remove, associate)
+            @target.delete(associate)
+          end
+        end
+        self
+      end
+
+        private
+        
+        #In case this gets pulled into rails edge, we should probably consider extending AssociationCollection insteed on AssociationProxy
+        #this is copied from Rails code base, so not specing this out.
+        def callback(method, *args)
+          callbacks_for(method).each do |callback|
+            case callback
+              when Symbol
+                @owner.send(callback, *args)
+              when Proc, Method
+                callback.call(@owner, *args)
+              else
+                if callback.respond_to?(method)
+                  callback.send(method, @owner, *args)
+                else
+                  raise ActiveRecordError, "Callbacks must be a symbol denoting the method to call, a string to be evaluated, a block to be invoked, or an object responding to the callback method."
+                end
+            end
+          end
+        end
+
+        def callbacks_for(callback_name)
+          full_callback_name = "#{callback_name}_for_#{@reflection.name}"
+          @owner.class.read_inheritable_attribute(full_callback_name.to_sym) || []
         end
       end
     end
