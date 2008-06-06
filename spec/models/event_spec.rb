@@ -61,6 +61,40 @@ describe Event do
       it "should be able to find invitees" do
         @event.invitees.should include(@janick)
       end
+
+      describe "> tribes" do
+        before do
+          @adrain = @event.invitees.create!(:name => "Adrain Smith", :tribe => Tribe.create!(:name => "Clansman's tribe"))
+          @clansmans_tribe = @adrain.tribe
+          @event.reload
+        end
+
+        it "should be able to create" do
+          @atlantis = @event.tribes.create!(:name => 'Atlantis')
+          @event.reload
+          @event.should have(2).tribes
+          @event.tribes.should include(@atlantis)
+        end
+
+        it "should be able to delete" do
+          @event.tribes.delete(@clansmans_tribe)
+          @event.reload
+          @event.tribes.should have(0).records
+          @event.invitees.should_not include(@adrain)
+        end
+
+        it "should be able to <<" do
+          @guitaring_tribe = Tribe.create!(:name => 'Superb guitarists')
+          @event.tribes << @guitaring_tribe
+          @event.reload
+          @event.should have(2).tribes
+          @event.tribes.should include(@guitaring_tribe)
+        end
+
+        it "should be able to find invitees" do
+          @event.tribes.should include(@clansmans_tribe)
+        end
+      end
     end
 
     describe "> attendees" do

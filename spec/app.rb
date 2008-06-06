@@ -40,9 +40,10 @@ ActiveRecord::Migration.suppress_messages do
 
     create_table :invitees, :force => true do |t|
       t.string :name
+      t.references :tribe
     end
 
-    create_table :invitees, :force => true do |t|
+    create_table :tribes, :force => true do |t|
       t.string :name
     end
 
@@ -111,6 +112,7 @@ class Comment < ActiveRecord::Base
 end
 
 class Invitee < ActiveRecord::Base
+  belongs_to :tribe
 end
 
 class Invitation < ActiveRecord::Base
@@ -127,4 +129,7 @@ class Event < ActiveRecord::Base
   has_many :invitations, :through => :event_associates, :source => :associate, :source_type => Invitation.name
   has_many :invitees, :through => :invitations
   has_many :attendees, :through => :invitations, :source => :invitee, :conditions => ['attending = ?', true]
+  has_many :tribes, :through => :invitees
 end
+
+class Tribe < ActiveRecord::Base; end
