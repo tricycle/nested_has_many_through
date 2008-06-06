@@ -24,6 +24,33 @@ module NestedHasManyThrough
           @nested_join_attributes ||= construct_nested_join_attributes
           "#{@nested_join_attributes[:joins]} #{custom_joins}"
         end
+
+        def construct_owner_attributes(reflection)
+          return {} if reflection.through_reflection
+          if as = reflection.options[:as]
+            { "#{as}_id" => @owner.id,
+              "#{as}_type" => @owner.class.base_class.name.to_s }
+          else
+            { reflection.primary_key_name => @owner.id }
+          end
+        end
+
+        def <<(*records)
+          return if records.empty?
+          through = @reflection.through_reflection
+          raise ActiveRecord::HasManyThroughCantAssociateNewRecords.new(@owner, through) if @owner.new_record?
+
+          target_class = through.klass
+          target_class.transaction do
+            flatten_deeper(records).each do |associate|
+              raise_on_type_mismatch(associate)
+              raise ActiveRecord::HasManyThroughCantAssociateNewRecords.new(@owner, through) unless associate.respond_to?(:new_record?) && !associate.new_record?
+              @owner.send(@reflection.through_reflection.name) << target_class.send(:with_scope, :create => construct_join_attributes(associate)) { target_class.create! }
+              @target << associate if loaded?
+            end
+          end
+          self
+        end
       end
     end
 

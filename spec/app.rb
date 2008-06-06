@@ -23,6 +23,33 @@ ActiveRecord::Migration.suppress_messages do
       t.column "user_id", :integer
       t.column "post_id", :integer
     end
+
+    create_table :events, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :event_associates, :force => true do |t|
+      t.references :event
+      t.references :associate, :polymorphic => true
+    end
+
+    create_table :event_associates, :force => true do |t|
+      t.references :event
+      t.references :associate, :polymorphic => true
+    end
+
+    create_table :invitees, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :invitees, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :invitations, :force => true do |t|
+      t.references :invitee
+      t.boolean :attending
+    end
   end
 end
 
@@ -81,4 +108,23 @@ end
 class Comment < ActiveRecord::Base
   belongs_to :user
   belongs_to :post
+end
+
+class Invitee < ActiveRecord::Base
+end
+
+class Invitation < ActiveRecord::Base
+  belongs_to :invitee
+end
+
+class EventAssociate < ActiveRecord::Base
+  belongs_to :event
+  belongs_to :associate, :polymorphic => true
+end
+
+class Event < ActiveRecord::Base
+  has_many :event_associates
+  has_many :invitations, :through => :event_associates, :source => :associate, :source_type => Invitation.name
+  has_many :invitees, :through => :invitations
+  has_many :attendees, :through => :invitations, :source => :invitee, :conditions => ['attending = ?', true]
 end
