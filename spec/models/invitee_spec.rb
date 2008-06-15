@@ -42,7 +42,7 @@ describe Invitee do
       end
 
       it "should be able to create" do
-        pending("Gotta think if it makes sence to create an anonymous entity in case of an insert for has_one too")
+        pending("Gotta think if it makes sense to create an anonymous entity in case of an insert for has_one too")
         donington_gig = @dave.events.create!(:name => 'Donington gig')
         @dave.reload
         @dave.should have(1).events
@@ -50,14 +50,14 @@ describe Invitee do
       end
 
       it "should be able to delete" do
-        pending("Gotta implement this")
+        pending("Gotta think if it makes sense to implement this")
         @janick.events.delete(@barcamp)
         @janick.reload
         @janick.events.should have(0).records
       end
 
       it "should be able to <<" do
-        pending("Gotta think if it makes sence to create an anonymous entity in case of an insert for has_one too")
+        pending("Gotta think if it makes sense to create an anonymous entity in case of an insert for has_one too")
         @dave.events << @barcamp
         @dave.reload
         @dave.should have(1).events
@@ -70,6 +70,13 @@ describe Invitee do
 
       it "should be able to find invitees" do
         @janick.events.should include(@barcamp)
+      end
+
+      it "should be able to find invitees[for a more complicated case]" do
+        @barcamp.invitees << @dave
+        @rio_gig.invitees << @dave
+        @dave.events.should include(@barcamp, @rio_gig)
+        @dave.events.count.should == 2
       end
     end
   end

@@ -59,23 +59,23 @@ module NestedHasManyThrough
         end
 
         def delete(*records)
-        through = @reflection.through_reflection
-        raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) if @owner.new_record?
+          through = @reflection.through_reflection
+          raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) if @owner.new_record?
 
-        load_target
-        klass = through.klass
-        klass.transaction do
-          flatten_deeper(records).each do |associate|
-            raise_on_type_mismatch(associate)
-            raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) unless associate.respond_to?(:new_record?) && !associate.new_record?
-            callback(:before_remove, associate)
-            @owner.send(through.name).proxy_target.delete(klass.delete_all(construct_join_attributes(associate)))
-            callback(:after_remove, associate)
-            @target.delete(associate)
+          load_target
+          klass = through.klass
+          klass.transaction do
+            flatten_deeper(records).each do |associate|
+              raise_on_type_mismatch(associate)
+              raise ActiveRecord::HasManyThroughCantDissociateNewRecords.new(@owner, through) unless associate.respond_to?(:new_record?) && !associate.new_record?
+              callback(:before_remove, associate)
+              @owner.send(through.name).proxy_target.delete(klass.delete_all(construct_join_attributes(associate)))
+              callback(:after_remove, associate)
+              @target.delete(associate)
+            end
           end
+          self
         end
-        self
-      end
 
         private
         
