@@ -120,7 +120,7 @@ module NestedHasManyThrough
     def construct_nested_join_attributes( reflection = @reflection, 
                                           association_class = reflection.klass,
                                           table_ids = {association_class.table_name => 1})
-      if reflection.macro == :has_many && reflection.through_reflection
+      if reflection.through_reflection
         construct_has_many_through_attributes(reflection, table_ids)
       else
         construct_has_many_or_belongs_to_attributes(reflection, association_class, table_ids)

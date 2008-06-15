@@ -126,10 +126,14 @@ end
 
 class Invitee < ActiveRecord::Base
   belongs_to :tribe
+  has_many :invitations
+  has_many :events, :through => :invitations
 end
 
 class Invitation < ActiveRecord::Base
   belongs_to :invitee
+  has_one :event_associate, :as => :associate
+  has_one :event, :through => :event_associate
 end
 
 class EventAssociate < ActiveRecord::Base
