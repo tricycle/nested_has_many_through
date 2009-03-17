@@ -15,6 +15,10 @@ module NestedHasManyThrough
   module Association
     def self.included(base)
       base.class_eval do
+        def count
+          with_scope(:find => {:select => '*'}) {super}
+        end
+
         def construct_conditions
           @nested_join_attributes ||= construct_nested_join_attributes
           "#{@nested_join_attributes[:remote_key]} = #{@owner.quoted_id} #{@nested_join_attributes[:conditions]}"
