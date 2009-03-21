@@ -23,6 +23,47 @@ ActiveRecord::Migration.suppress_messages do
       t.column "user_id", :integer
       t.column "post_id", :integer
     end
+
+    create_table :events, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :event_associates, :force => true do |t|
+      t.references :event
+      t.references :associate, :polymorphic => true
+    end
+
+    create_table :event_associates, :force => true do |t|
+      t.references :event
+      t.references :associate, :polymorphic => true
+    end
+
+    create_table :invitees, :force => true do |t|
+      t.string :name
+      t.references :tribe
+    end
+
+    create_table :tribes, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :invitations, :force => true do |t|
+      t.references :invitee
+      t.boolean :attending
+    end
+
+    create_table :countries, :force => true do |t|
+      t.string :name
+    end
+
+    create_table :citizenships, :force => true do |t|
+      t.references :country
+      t.references :citizen
+    end
+
+    create_table :citizens, :force => true do |t|
+      t.string :name
+    end
   end
 end
 
@@ -82,3 +123,48 @@ class Comment < ActiveRecord::Base
   belongs_to :user
   belongs_to :post
 end
+
+class Invitee < ActiveRecord::Base
+  belongs_to :tribe
+  has_many :invitations
+  has_many :events, :through => :invitations
+end
+
+class Invitation < ActiveRecord::Base
+  belongs_to :invitee
+  has_one :event_associate, :as => :associate
+  has_one :event, :through => :event_associate
+end
+
+class EventAssociate < ActiveRecord::Base
+  belongs_to :event
+  belongs_to :associate, :polymorphic => true
+end
+
+class Event < ActiveRecord::Base
+  has_many :event_associates
+  has_many :invitations, :through => :event_associates, :source => :associate, :source_type => Invitation.name
+  has_many :invitees, :through => :invitations
+  has_many :attendees, :through => :invitations, :source => :invitee, :conditions => ['attending = ?', true], :before_add => [:before_attendee_add]
+  has_many :tribes, :through => :invitees
+
+  def before_attendee_add attendee, invitation_params
+    invitation_params[:attending] = true
+  end
+end
+
+class Tribe < ActiveRecord::Base; end
+
+class Country < ActiveRecord::Base
+  has_many :citizenships
+  has_many :citizens, :through => :citizenships, :before_add => [:before_citizen_add]
+
+  def before_citizen_add; end
+end
+
+class Citizenship < ActiveRecord::Base
+  belongs_to :country
+  belongs_to :citizen
+end
+
+class Citizen < ActiveRecord::Base; end
