@@ -15,7 +15,7 @@ module NestedHasManyThrough
   module Association
     def self.included(base)
       base.class_eval do
-        def count
+        def count(*args)
           with_scope(:find => {:select => '*'}) {super}
         end
 
